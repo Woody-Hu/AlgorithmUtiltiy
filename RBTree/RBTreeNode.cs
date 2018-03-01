@@ -154,14 +154,15 @@ namespace RBTree
 
             thisLeftValue.Parent = this.Parent;
 
-            if (this.Parent.LeftNode == this)
+            if (null != this.Parent && this.Parent.LeftNode == this)
             {
                 this.Parent.LeftNode = thisLeftValue;
             }
-            else
+            else if (null != this.Parent && this.Parent.RightNode == this)
             {
                 this.Parent.RightNode = thisLeftValue;
             }
+
 
             thisLeftValue.RightNode = this;
 
@@ -172,6 +173,11 @@ namespace RBTree
                 useTree.RootNode = this.Parent;
             }
 
+        }
+
+        internal void ChangeColor()
+        {
+            this.IfIsRed = !this.IfIsRed;
         }
         
     }

@@ -30,7 +30,9 @@ namespace RBTree
                 return false;
             }
 
-            var findedNode = FindLoop(RootNode, inputValue);
+            RBTreeNode<T> lastParent = null;
+
+            var findedNode = FindLoop(RootNode, inputValue,ref lastParent);
 
             return (null != findedNode && !findedNode.IfIsRemoved);
         }
@@ -40,11 +42,16 @@ namespace RBTree
             return null == m_thisRoot || null == inputValue;
         }
 
-        private RBTreeNode<T> FindLoop(RBTreeNode<T> nowNode,T inputValue)
+        private RBTreeNode<T> FindLoop(RBTreeNode<T> nowNode,T inputValue,ref RBTreeNode<T> lastFindParentNode)
         {
             if (null == nowNode)
             {
                 return null;
+            }
+
+            if (ChangeColor(nowNode))
+            {
+                RoateNode(nowNode);
             }
 
             var compareValue = inputValue.CompareTo(nowNode.ThisValue);
@@ -55,11 +62,13 @@ namespace RBTree
             }
             else if (compareValue > 0)
             {
-                return FindLoop(nowNode.RightNode, inputValue);
+                lastFindParentNode = nowNode;
+                return FindLoop(nowNode.RightNode, inputValue,ref lastFindParentNode);
             }
             else
             {
-                return FindLoop(nowNode.LeftNode, inputValue);
+                lastFindParentNode = nowNode;
+                return FindLoop(nowNode.LeftNode, inputValue, ref lastFindParentNode);
             }
         }
 
@@ -72,11 +81,13 @@ namespace RBTree
 
             if (null == RootNode)
             {
-                RootNode = new RBTreeNode<T>(inputValue);
+                RootNode = new RBTreeNode<T>(inputValue,false);
                 return true;
             }
 
-            var findedValue = FindLoop(RootNode, inputValue);
+            RBTreeNode<T> lastParent = null;
+
+            var findedValue = FindLoop(RootNode, inputValue, ref lastParent);
 
             if (null != findedValue)
             {
@@ -92,7 +103,108 @@ namespace RBTree
                 }
             }
 
-            throw new NotImplementedException();
+            if (null != lastParent)
+            {
+                RBTreeNode<T> tempNode = new RBTreeNode<T>(inputValue);
+
+                if (inputValue.CompareTo(lastParent.ThisValue) > 0)
+                {
+                    tempNode.Parent = lastParent;
+                    lastParent.RightNode = tempNode;
+                }
+                else if (inputValue.CompareTo(lastParent.ThisValue) < 0)
+                {
+                    tempNode.Parent = lastParent;
+                    lastParent.LeftNode = tempNode;
+                }
+                RoateNode(tempNode);
+
+                return true;
+            }
+
+            return false;
+        }
+
+        private void RoateNode(RBTreeNode<T> inputNode)
+        {
+            var parentNode = inputNode.Parent;
+
+            var parentparentNode = parentNode.Parent;
+
+            if (!parentNode.IfIsRed)
+            {
+                return;
+            }
+
+            if ((inputNode == parentNode.LeftNode && parentNode == parentparentNode.LeftNode) 
+                || 
+                (inputNode == parentNode.RightNode && parentNode == parentparentNode.RightNode))
+            {
+                parentparentNode.ChangeColor();
+                parentNode.ChangeColor();
+
+                if (parentNode == parentparentNode.LeftNode)
+                {
+                    parentparentNode.RightRoate(this);
+                }
+                else
+                {
+                    parentparentNode.LeftRoate(this);
+                }
+
+              
+            }
+            else
+            {
+                parentparentNode.ChangeColor();
+                inputNode.ChangeColor();
+
+                if (inputNode == parentNode.LeftNode)
+                {
+                    parentNode.RightRoate(this);
+                }
+                else
+                {
+                    parentNode.LeftRoate(this);
+                }
+
+                if (inputNode == parentparentNode.LeftNode)
+                {
+                    parentparentNode.RightRoate(this);
+                }
+                else
+                {
+                    parentparentNode.LeftRoate(this);
+                }
+            }
+
+            ChangeColor(parentparentNode.Parent);
+        }
+
+        private bool ChangeColor(RBTreeNode<T> inputNode)
+        {
+
+            if (!inputNode.IfIsRed && null != inputNode.LeftNode && null != inputNode.RightNode && inputNode.LeftNode.IfIsRed && inputNode.RightNode.IfIsRed)
+            {
+                inputNode.LeftNode.ChangeColor();
+                inputNode.RightNode.ChangeColor();
+
+                if (inputNode != RootNode)
+                {
+                    inputNode.ChangeColor();
+                    return true;
+                }
+                else
+                {
+      
+                    return false;
+                }
+               
+            }
+
+            return false;
+
+
         }
 
         public bool Delete(T inputValue)
@@ -101,7 +213,27 @@ namespace RBTree
             {
                 return false;
             }
-            throw new NotImplementedException();
+
+            RBTreeNode<T> lastParent = null;
+
+            var findedValue = FindLoop(RootNode, inputValue, ref lastParent);
+
+            if (null == findedValue)
+            {
+                return false;
+            }
+            else
+            {
+                if (findedValue.IfIsRemoved )
+                {
+                    return false;
+                }
+                else
+                {
+                    return true;
+                }
+            }
+            
         }
     }
 }
